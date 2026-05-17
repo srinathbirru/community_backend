@@ -10,8 +10,6 @@ class SignupRequest(BaseModel):
     mobile: str = Field(..., min_length=10, max_length=15)
     email: str = Field(..., max_length=255)
     password: str = Field(..., min_length=6)
-    community_code: str = Field(..., max_length=20)
-    flat_number: str = Field(..., max_length=50)
 
 
 class LoginRequest(BaseModel):
@@ -22,19 +20,29 @@ class LoginRequest(BaseModel):
     password: str = Field(..., min_length=6)
 
 
-class AddProfileRequest(BaseModel):
-    user_id: int
+class CreateUnitRequest(BaseModel):
     community_code: str = Field(..., max_length=20)
+    block: str = Field(None, max_length=50)
     flat_number: str = Field(..., max_length=50)
+    floor: str = Field(None, max_length=50)
 
 
-class UserProfileResponse(BaseModel):
-    id: int
-    community_code: str
-    flat_number: str
-    created_at: datetime
+class UnitResponse(BaseModel):
+    message: str
+    unit_id: int
+    community_id: int
 
-    model_config = ConfigDict(from_attributes=True)
+
+class CreateUnitMemberRequest(BaseModel):
+    user_id: int
+    unit_id: int
+    community_id: int
+    role: str = Field(..., max_length=50)
+    status: bool = Field(default=False)
+
+
+class UnitMemberResponse(BaseModel):
+    message: str
 
 
 class UserResponse(BaseModel):
@@ -42,20 +50,14 @@ class UserResponse(BaseModel):
     full_name: str
     mobile: str
     email: str
-    community_code: str
-    flat_number: str
     created_at: datetime
 
     model_config = ConfigDict(from_attributes=True)
 
 
 class SignupResponse(BaseModel):
-    user_exists: bool
     message: str
-    access_token: str | None = None
-    token_type: str | None = None
-    user: UserResponse | None = None
-    profiles: list[UserProfileResponse] = []
+    user_id: int | None = None
 
 
 class TokenResponse(BaseModel):

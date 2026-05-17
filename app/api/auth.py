@@ -5,15 +5,18 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
 from app.repositories.community_repository import CommunityRepository
-from app.repositories.user_profile_repository import UserProfileRepository
+from app.repositories.unit_member_repository import UnitMemberRepository
+from app.repositories.unit_repository import UnitRepository
 from app.repositories.user_repository import UserRepository
 from app.schemas.auth_schema import (
-    AddProfileRequest,
+    CreateUnitMemberRequest,
+    CreateUnitRequest,
     LoginRequest,
     SignupRequest,
     SignupResponse,
     TokenResponse,
-    UserProfileResponse,
+    UnitMemberResponse,
+    UnitResponse,
     UserResponse,
 )
 from app.services.auth_service import AuthService
@@ -26,8 +29,9 @@ def get_auth_service(
 ) -> AuthService:
     return AuthService(
         repo=UserRepository(db),
+        unit_repo=UnitRepository(db),
+        unit_member_repo=UnitMemberRepository(db),
         community_repo=CommunityRepository(db),
-        profile_repo=UserProfileRepository(db),
     )
 
 
@@ -51,7 +55,7 @@ async def login(
     service: AuthService = Depends(get_auth_service),
 ):
     try:
-        user, token, _ = await service.login(payload.identifier, payload.password)
+        user, token = await service.login(payload.identifier, payload.password)
         return TokenResponse(
             access_token=token,
             token_type="bearer",
@@ -64,25 +68,27 @@ async def login(
         )
 
 
-@router.get("/profiles/{user_id}", response_model=list[UserProfileResponse])
-async def get_profiles(
-    user_id: int,
-    service: AuthService = Depends(get_auth_service),
-):
-    return await service.get_profiles(user_id)
-
-
-@router.post("/profiles", response_model=UserProfileResponse, status_code=status.HTTP_201_CREATED)
-async def add_profile(
-    payload: AddProfileRequest,
+@router.post("/units", response_model=UnitResponse, status_code=status.HTTP_201_CREATED)
+async def create_unit(
+    payload: CreateUnitRequest,
     service: AuthService = Depends(get_auth_service),
 ):
     try:
-        return await service.add_profile(
-            payload.user_id,
-            payload.community_code,
-            payload.flat_number,
+        return await service.create_unit(payload)
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e),
         )
+
+
+@router.post("/unit-members", response_model=UnitMemberResponse, status_code=status.HTTP_201_CREATED)
+async def create_unit_member(
+    payload: CreateUnitMemberRequest,
+    service: AuthService = Depends(get_auth_service),
+):
+    try:
+        return await service.create_unit_member(payload)
     except ValueError as e:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,

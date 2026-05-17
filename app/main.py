@@ -7,7 +7,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.core.config import settings
 from app.core.database import engine, Base
-from app.models import Community, User, UserProfile
+from app.models import Community, Unit, UnitMember, User
 from app.api.auth import router as auth_router
 from app.api.communities import router as communities_router
 
